@@ -1,5 +1,6 @@
 package org.ibartuszek.tutorial.kafka
 
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -20,6 +21,27 @@ private const val RECORDS_SIZE_TO_SEND = 10
 
 fun main() {
     runBlocking {
+        sendingReceivingExample()
+        delay(2000) // For separate the test cases
+        readingFromBeginning()
+    }
+}
+
+private suspend fun readingFromBeginning() {
+    coroutineScope {
+        val consumer = ReplayConsumer(Configuration.consumerProperties(), Configuration.topic)
+        val consumedMessages = CopyOnWriteArrayList<ConsumerRecord<String, String>>()
+        launch {
+            consumer.consume(0) { consumedMessages.add(it) }
+        }.join()
+        println("Consumed messages=${consumedMessages.size} (from beginning)")
+        consumer.close()
+        println("ReplayConsumer closed.")
+    }
+}
+
+private suspend fun sendingReceivingExample() {
+    coroutineScope {
         val consumer = ConsumerWrapper(Configuration.consumerProperties(), Configuration.topic)
         val consumedMessages = CopyOnWriteArrayList<ConsumerRecord<String, String>>()
         launch {
@@ -29,7 +51,18 @@ fun main() {
             }
         }
         delay(3000) // To reduce the time between the production and consumption of the messages
+        sendIngMessages()
+        while (consumedMessages.size < RECORDS_SIZE_TO_SEND) {
+            println("Waiting for messages...")
+            delay(500)
+        }
+        consumer.close()
+        println("Consumer closed.")
+    }
+}
 
+private suspend fun sendIngMessages() {
+    coroutineScope {
         val producer = ProducerWrapper(Configuration.producerProperties())
         val sendingJobs = (1..RECORDS_SIZE_TO_SEND).map {
             launch {
@@ -42,15 +75,7 @@ fun main() {
         sendingJobs.joinAll()
         println("Closing producer")
         producer.close()
-
-        while (consumedMessages.size < RECORDS_SIZE_TO_SEND) {
-            println("Waiting for messages...")
-            delay(500)
-        }
-        consumer.close()
-        println("Consumer closed.")
     }
-
 }
 
 private fun logConsumerRecord(it: ConsumerRecord<String, String>) {
