@@ -22,10 +22,7 @@ class ConsumerWrapper(properties: Properties, topic: String) {
         stopped.set(false)
         while (isConsuming.get()) {
             delay(10)
-            consumer.poll(Duration.of(100, ChronoUnit.MILLIS)).forEach {
-                handleMessage(it)
-            }
-            consumer.commitAsync()
+            consumer.poll(Duration.of(100, ChronoUnit.MILLIS)).forEach(handleMessage)
         }
         stopped.set(true)
     }
