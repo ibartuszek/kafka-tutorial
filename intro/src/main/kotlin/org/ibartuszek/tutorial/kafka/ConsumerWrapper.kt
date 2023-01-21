@@ -1,12 +1,14 @@
 package org.ibartuszek.tutorial.kafka
 
+import kotlinx.coroutines.delay
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-class ConsumerWrapper(properties: Properties, topic: String): Runnable {
+class ConsumerWrapper(properties: Properties, topic: String) {
 
     private val isConsuming = AtomicBoolean()
     private val stopped = AtomicBoolean()
@@ -15,26 +17,25 @@ class ConsumerWrapper(properties: Properties, topic: String): Runnable {
         subscribe(listOf(topic))
     }
 
-    override fun run() {
-        println("Start consumer")
+    suspend fun consume(handleMessage: (ConsumerRecord<String, String>) -> Unit) {
         isConsuming.set(true)
         stopped.set(false)
         while (isConsuming.get()) {
+            delay(10)
             consumer.poll(Duration.of(100, ChronoUnit.MILLIS)).forEach {
-                println("Incoming message, offset=${it.offset()}, key=${it.key()}, value=${it.value()}")
+                handleMessage(it)
             }
+            consumer.commitAsync()
         }
-        println("Consumer stopped polling messages.")
         stopped.set(true)
     }
 
-    fun close() {
+    suspend fun close() {
         isConsuming.set(false)
         while (!stopped.get()) {
-            Thread.sleep(20L)
+            delay(20L)
         }
         consumer.close()
-        println("Consumer closed.")
     }
 
 }
