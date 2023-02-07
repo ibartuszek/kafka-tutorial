@@ -2,9 +2,12 @@
 
 CONNECT_STANDALONE="connect-standalone.properties"
 CONNECT_FILE_SOURCE="connect-file-source.properties"
+CONNECT_FILE_SINK="connect-file-sink.properties"
 SOURCE_FILE="helloworld-input.txt"
+SINK_FILE="helloworld-sink.txt"
 TARGET_DIR="$PWD/tmp"
 TOPIC="helloworld"
+SINK_TOPIC="helloworld-sink"
 
 if [ -d "$TARGET_DIR" ]; then rm -Rf $TARGET_DIR; fi
 mkdir "$TARGET_DIR"
@@ -80,6 +83,30 @@ tasks.max=1
 file=$TARGET_DIR/$SOURCE_FILE
 topic=$TOPIC
 " >> "$TARGET_DIR/$CONNECT_FILE_SOURCE"
+
+echo "Generating: $CONNECT_FILE_SINK"
+echo "
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name=local-file-sink
+connector.class=FileStreamSink
+tasks.max=1
+file=$TARGET_DIR/$SINK_FILE
+topics=$SINK_TOPIC
+" >> "$TARGET_DIR/$CONNECT_FILE_SINK"
 
 echo "Generating: $SOURCE_FILE"
 echo "Hello world!" >> "$TARGET_DIR/$SOURCE_FILE"

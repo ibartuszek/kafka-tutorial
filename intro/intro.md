@@ -67,18 +67,39 @@ message number.
 
 #### With connect standalone
 
-Run first the `connect-to-file-init.sh` script, which will create in `tmp` directory:
-- The `connect-file-source.properties` contains the topic and the file location. (relative to project root) The file is
-copied from the original kafka file which can be found in the kafka config folder.
-- The `connect-standalone.properties` is a copy of the original kafka file which can be found in the kafka config folder
+Run first the `connect-to-file-init.sh` script, which will create in `tmp` directory in the intro module:
+- The `connect-standalone.properties` contains the bootstrap server address and the connect plugin path
+- The `connect-file-source.properties` contains the topic and the source file location. 
+- The `connect-file-sink.properties` contains the topic and the sink file location.
+- The previous files are copied (and adjusted) from the original kafka file which can be found in the kafka config folder.
 - The `helloworld-input.txt` is the input file where every new line became a new message in the broker
 
-To start kafka connect
+To start kafka connect (file source)
+
+- uses `helloworld` topic
+
 ```
 connect-standalone.sh tmp/connect-standalone.properties tmp/connect-file-source.properties
 ```
 
 Start a kafka console consumer to test. Then edit the file.
+
+To start kafka connect (file sink)
+
+- uses: `helloworld-sink` topic
+
+```
+connect-standalone.sh tmp/connect-standalone.properties tmp/connect-file-sink.properties
+```
+
+Start a kafka console producer, send messages. Then check the file content.
+
+NOTE: in case of kafka connect the kafka messages will be jsons e.g.:
+```
+{"schema":{"type":"string","optional":false},"payload":"Hello world!"}
+```
+That means we see the json in the consumer in case of file source and in case of sink file we have to send a json 
+with the producer.
 
 ### Troubleshooting:
 
