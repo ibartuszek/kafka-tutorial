@@ -1,2 +1,2 @@
 rootProject.name = "kafka-tutorial"
-include("intro")
+include("01_intro")
